@@ -4,9 +4,9 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+function getAnthropic() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+}
 
 interface Message {
   role: 'user' | 'assistant'
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     if (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'placeholder_for_now') {
       try {
-        const res = await anthropic.messages.create({
+        const res = await getAnthropic().messages.create({
           model: 'claude-sonnet-4-5',
           max_tokens: 200,
           messages: [

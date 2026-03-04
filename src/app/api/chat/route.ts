@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+function getAnthropic() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+}
 
 const SYSTEM_PROMPT = `너는 다송이야. 진원이형의 AI 어시스턴트.
 - 반말로 친근하게 대화해
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-5',
       max_tokens: 300,
       system: SYSTEM_PROMPT,
