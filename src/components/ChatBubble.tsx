@@ -1,4 +1,9 @@
-import type { Message } from '@/app/page'
+interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  text: string
+  timestamp: Date
+}
 
 interface Props {
   message: Message
