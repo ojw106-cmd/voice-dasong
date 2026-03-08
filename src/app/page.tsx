@@ -91,7 +91,15 @@ export default function Home() {
     isRecordingRef.current = true
     chunksRef.current = []
     
-    const recorder = new MediaRecorder(stream)
+    // iOS Safari는 webm 미지원 → mp4 fallback
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : MediaRecorder.isTypeSupported('audio/mp4')
+        ? 'audio/mp4'
+        : ''
+    const recorder = mimeType
+      ? new MediaRecorder(stream, { mimeType })
+      : new MediaRecorder(stream)
     recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
     recorder.start(100)
     mediaRecorderRef.current = recorder
@@ -111,7 +119,8 @@ export default function Home() {
     mediaRecorderRef.current.stop()
     await new Promise(r => { mediaRecorderRef.current!.onstop = r })
 
-    const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+    const recorderMime = mediaRecorderRef.current?.mimeType || 'audio/webm'
+    const blob = new Blob(chunksRef.current, { type: recorderMime })
     
     // 너무 짧은 녹음 무시 (0.5초 미만)
     if (blob.size < 5000) {
@@ -149,7 +158,7 @@ export default function Home() {
       const sttRes = await fetch('/api/transcribe', { method: 'POST', body: form }).then(r => r.json())
       if (sttRes.error) { console.error('STT error:', sttRes); setStatusText(`STT 오류: ${sttRes.detail || sttRes.error}`); setTimeout(restartListening, 3000); return }
       const text = sttRes.text
-      if (!text?.trim()) { restartListening(); return }
+      if (!text?.trim()) { setStatusText(`인식 실패 (빈 텍스트, ${blob.size}bytes, ${recorderMime})`); setTimeout(restartListening, 3000); return }
 
       const userMsg: Message = { role: 'user', content: text }
       const newMessages = [...messagesRef.current, userMsg]
