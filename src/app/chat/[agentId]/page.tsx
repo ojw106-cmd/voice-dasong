@@ -157,7 +157,7 @@ export default function VoiceChat() {
       const audioRes = await fetch('/api/speak', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: reply }),
+        body: JSON.stringify({ text: reply, agent: agentId }),
       })
       const audioBlob = await audioRes.blob()
       const url = URL.createObjectURL(audioBlob)
