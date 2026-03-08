@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
 
 const SYSTEM_PROMPT = `너는 다송이야. 진원이형의 AI 어시스턴트.
 - 반말로 친근하게 대화해
@@ -14,6 +15,10 @@ interface Message {
   content: string
 }
 
+function getAnthropic() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { messages }: { messages: Message[] } = await req.json()
@@ -22,44 +27,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '메시지 없음' }, { status: 400 })
     }
 
-    const proxyUrl = process.env.PROXY_URL || process.env.NEXT_PUBLIC_PROXY_URL
-    const proxySecret = process.env.PROXY_SECRET
-
-    // Mac mini 프록시 사용
-    if (proxyUrl && proxySecret) {
-      const proxyRes = await fetch(`${proxyUrl}/api/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${proxySecret}`,
-        },
-        body: JSON.stringify({
-          messages: messages.map((m) => ({ role: m.role, content: m.content })),
-          system: SYSTEM_PROMPT,
-        }),
-      })
-
-      if (!proxyRes.ok) {
-        const errText = await proxyRes.text()
-        console.error('프록시 오류:', proxyRes.status, errText)
-        return NextResponse.json({ error: `프록시 오류: ${proxyRes.status}` }, { status: proxyRes.status })
-      }
-
-      const data = await proxyRes.json()
-      // Anthropic API 응답 형식에서 텍스트 추출
-      const reply =
-        data.content?.[0]?.type === 'text'
-          ? data.content[0].text
-          : data.reply || '음.. 뭔가 오류났어. 다시 물어봐'
-
-      return NextResponse.json({ reply })
-    }
-
-    // Fallback: 프록시 미설정 시 기본 응답
-    const userMsg = messages[messages.length - 1]?.content || ''
-    return NextResponse.json({
-      reply: `형 말 들었어. "${userMsg.slice(0, 30)}" — 프록시 연결이 아직 설정 안 됐어. PROXY_URL이랑 PROXY_SECRET 환경변수 확인해줘!`,
+    const response = await getAnthropic().messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 300,
+      system: SYSTEM_PROMPT,
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
     })
+
+    const reply =
+      response.content[0]?.type === 'text'
+        ? response.content[0].text
+        : '음.. 뭔가 오류났어. 다시 물어봐'
+
+    return NextResponse.json({ reply })
   } catch (error) {
     console.error('Chat 오류:', error)
     return NextResponse.json({ error: 'Chat 실패' }, { status: 500 })
