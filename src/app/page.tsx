@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 type Message = { role: 'user' | 'assistant'; content: string }
 type AppState = 'idle' | 'listening' | 'recording' | 'processing' | 'speaking'
 
-const VOLUME_THRESHOLD = 0.015  // 볼륨 임계값 (0~1)
+const VOLUME_THRESHOLD = 0.035  // 볼륨 임계값 (0~1) — 0.015에서 올림 (Whisper 환각 방지)
 const SILENCE_DURATION = 1500   // 침묵 감지 시간 (ms)
 
 export default function Home() {

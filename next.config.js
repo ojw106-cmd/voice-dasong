@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['ws'],
   // PWA will be handled via custom service worker in public/
   headers: async () => [
     {
