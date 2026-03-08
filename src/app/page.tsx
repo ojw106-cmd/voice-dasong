@@ -146,7 +146,9 @@ export default function Home() {
     form.append('audio', blob)
     
     try {
-      const { text } = await fetch('/api/transcribe', { method: 'POST', body: form }).then(r => r.json())
+      const sttRes = await fetch('/api/transcribe', { method: 'POST', body: form }).then(r => r.json())
+      if (sttRes.error) { console.error('STT error:', sttRes); setStatusText(`STT 오류: ${sttRes.detail || sttRes.error}`); setTimeout(restartListening, 3000); return }
+      const text = sttRes.text
       if (!text?.trim()) { restartListening(); return }
 
       const userMsg: Message = { role: 'user', content: text }

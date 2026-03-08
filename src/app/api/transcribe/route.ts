@@ -31,9 +31,9 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ text: transcription.text })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Whisper STT 오류:', error)
-    return NextResponse.json({ error: 'STT 실패' }, { status: 500 })
+    return NextResponse.json({ error: 'STT 실패', detail: error?.message || String(error) }, { status: 500 })
   }
 }
 

@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
         : '음.. 뭔가 오류났어. 다시 물어봐'
 
     return NextResponse.json({ reply })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Chat 오류:', error)
-    return NextResponse.json({ error: 'Chat 실패' }, { status: 500 })
+    return NextResponse.json({ error: 'Chat 실패', detail: error?.message || String(error) }, { status: 500 })
   }
 }
