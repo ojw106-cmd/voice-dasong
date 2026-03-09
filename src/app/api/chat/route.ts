@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '메시지 없음' }, { status: 400 })
     }
 
-    const lastMessage = messages[messages.length - 1]?.content || ''
+    const rawMessage = messages[messages.length - 1]?.content || ''
+    // 보이스챗임을 에이전트에게 알려서 짧게 + 마크다운 없이 답하도록
+    const lastMessage = `[보이스챗] ${rawMessage}\n(음성 대화 중이니 1-3문장으로 짧게, 마크다운(**나 #) 없이 답해줘)`
     const agentId = agent || 'main'
 
     const { stdout } = await execFileAsync('openclaw', [

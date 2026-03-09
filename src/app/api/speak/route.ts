@@ -26,8 +26,16 @@ export async function POST(req: NextRequest) {
 
     const voice = voiceMap[agent || 'main'] || 'ballad'
 
-    // 텍스트 길이 제한 (TTS는 4096자 제한)
-    const truncated = text.slice(0, 1000)
+    // 마크다운 제거 + 텍스트 길이 제한
+    const cleaned = text
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/`{1,3}[^`]*`{1,3}/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/[-•] /g, '')
+      .trim()
+    const truncated = cleaned.slice(0, 1000)
 
     const mp3 = await getOpenAI().audio.speech.create({
       model: 'tts-1',
