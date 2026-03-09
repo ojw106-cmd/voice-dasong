@@ -159,11 +159,18 @@ export default function VoiceChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: reply, agent: agentId }),
       })
-      const audioBlob = await audioRes.blob()
-      const url = URL.createObjectURL(audioBlob)
-      const player = new Audio(url)
-      player.onended = () => { URL.revokeObjectURL(url); restartListening() }
-      player.play()
+      
+      if (!audioRes.ok) { setStatusText('TTS 오류'); setTimeout(restartListening, 2000); return }
+
+      // AudioContext 재생 (iOS Safari 호환)
+      const arrayBuffer = await audioRes.arrayBuffer()
+      const audioCtx = new AudioContext()
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+      const source = audioCtx.createBufferSource()
+      source.buffer = audioBuffer
+      source.connect(audioCtx.destination)
+      source.onended = () => { audioCtx.close(); restartListening() }
+      source.start(0)
     } catch (e) {
       setStatusText('오류 발생, 다시 시도할게요')
       setTimeout(restartListening, 2000)
